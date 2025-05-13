@@ -20,7 +20,7 @@ echo "</pre>";
 echo "<h2>Database Connection Test:</h2>";
 try {
     $conn = new PDO(
-        "sqlsrv:Server=tcp:dtbase1.database.windows.net,1433;Database=db",
+        "sqlsrv:Server=tcp:dtbase1.database.windows.net,1433;Database=db;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30",
         "abdullah",
         getenv('AZURE_SQL_CONNECTION_STRING_PASSWORD'),
         array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)
@@ -28,5 +28,10 @@ try {
     echo "Connection successful!";
 } catch (PDOException $e) {
     echo "Connection failed: " . $e->getMessage();
+    // Add more detailed error information
+    error_log("Connection Error Details: " . $e->getMessage());
+    error_log("Server: dtbase1.database.windows.net");
+    error_log("Database: db");
+    error_log("Username: abdullah");
 }
 ?> 
