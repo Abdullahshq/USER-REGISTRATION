@@ -18,23 +18,28 @@ echo "</pre>";
 
 // Try to connect to the database
 echo "<h2>Database Connection Test:</h2>";
+
+// Debug information
+$password = getenv('AZURE_SQL_CONNECTION_STRING_PASSWORD');
+error_log("Password environment variable is " . ($password ? "set" : "not set"));
+error_log("Username being used: abdullah");
+error_log("Server: dtbase1.database.windows.net");
+error_log("Database: db");
+
 try {
     $conn = new PDO(
-        "sqlsrv:Server=tcp:dtbase1.database.windows.net,1433;Database=db;Encrypt=yes;TrustServerCertificate=no",
+        "sqlsrv:Server=tcp:dtbase1.database.windows.net,1433;Database=db;Encrypt=yes;TrustServerCertificate=no;MultipleActiveResultSets=false",
         "abdullah",
-        getenv('AZURE_SQL_CONNECTION_STRING_PASSWORD'),
+        $password,
         array(
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-            PDO::ATTR_TIMEOUT => 30
+            PDO::ATTR_TIMEOUT => 30,
+            PDO::SQLSRV_ATTR_ENCODING => PDO::SQLSRV_ENCODING_UTF8
         )
     );
     echo "Connection successful!";
 } catch (PDOException $e) {
     echo "Connection failed: " . $e->getMessage();
-    // Add more detailed error information
     error_log("Connection Error Details: " . $e->getMessage());
-    error_log("Server: dtbase1.database.windows.net");
-    error_log("Database: db");
-    error_log("Username: abdullah");
 }
 ?> 
