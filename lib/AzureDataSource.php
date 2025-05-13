@@ -12,7 +12,10 @@ class AzureDataSource
 
     function __construct()
     {
-        $this->connectionString = "Server=tcp:appdbhtml.database.windows.net,1433;Initial Catalog=abddb;Persist Security Info=False;User ID={your_username};Password={your_password};MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Authentication=\"Active Directory Password\";";
+        $this->connectionString = getenv('AZURE_SQL_CONNECTION_STRING');
+        if (empty($this->connectionString)) {
+            throw new \Exception('Database connection string not found in environment variables');
+        }
         $this->conn = $this->getConnection();
     }
 
