@@ -20,9 +20,9 @@ echo "</pre>";
 echo "<h2>Database Connection Test:</h2>";
 try {
     $conn = new PDO(
-        "sqlsrv:Server=tcp:appdbhtml.database.windows.net,1433;Database=abddb;Authentication=ActiveDirectoryManagedIdentity",
-        null,
-        null,
+        "sqlsrv:Server=tcp:dtbase1.database.windows.net,1433;Database=db",
+        "abdullah",
+        getenv('AZURE_SQL_CONNECTION_STRING_PASSWORD'),
         array(PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION)
     );
     echo "Connection successful!";
