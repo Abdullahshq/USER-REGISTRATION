@@ -20,73 +20,23 @@ echo "</pre>";
 echo "<h2>Database Connection Test:</h2>";
 
 // Get the connection string from Azure App Service Configuration
-// This will automatically use the connection string from Azure App Service
 $connString = getenv('AZURE_SQL_CONNECTION_STRING');
 
-// If using Managed Identity, we'll use a different connection approach
-$useManagedIdentity = getenv('USE_MANAGED_IDENTITY') === 'true';
-
-if ($useManagedIdentity) {
-    echo "<h3>Using Azure Managed Identity for Authentication</h3>";
-    // For Managed Identity, we only need the server and database name
-    $serverName = getenv('AZURE_SQL_SERVER');
-    $databaseName = getenv('AZURE_SQL_DATABASE');
-    
-    if (!$serverName || !$databaseName) {
-        die("Error: When using Managed Identity, both AZURE_SQL_SERVER and AZURE_SQL_DATABASE must be set in Azure App Service Configuration");
-    }
-    
-    $pdoConnString = "sqlsrv:Server=$serverName;Database=$databaseName;Authentication=ActiveDirectoryManagedIdentity";
-} else {
-    // Traditional connection string approach
-    if (!$connString) {
-        die("Error: AZURE_SQL_CONNECTION_STRING is not set in Azure App Service Configuration");
-    }
-    
-    // Convert ADO.NET connection string to PDO format
-    $pdoConnString = "sqlsrv:Server=" . 
-        str_replace(
-            array(
-                'Server=tcp:',
-                'Initial Catalog=',
-                ';Persist Security Info=False',
-                ';MultipleActiveResultSets=False',
-                ';Encrypt=True',
-                ';TrustServerCertificate=False',
-                ';Connection Timeout=30'
-            ),
-            array(
-                '',
-                'Database=',
-                '',
-                '',
-                ';Encrypt=yes',
-                ';TrustServerCertificate=no',
-                ';ConnectionTimeout=60'
-            ),
-            $connString
-        );
+if (!$connString) {
+    die("Error: Please set AZURE_SQL_CONNECTION_STRING in Azure App Service Configuration");
 }
 
-error_log("PDO Connection string: " . $pdoConnString);
-
-// Set connection options
-$options = array(
-    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-    PDO::ATTR_TIMEOUT => 60, // Set PDO timeout to 60 seconds
-    PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60 // Set query timeout to 60 seconds
-);
-
-echo "<h3>Attempting Connection...</h3>";
-$startTime = microtime(true);
-
 try {
-    $conn = new PDO(
-        $pdoConnString,
-        null,
-        null,
-        $options
+    // Basic PDO connection with the connection string
+    $options = array(
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_TIMEOUT => 30
     );
+    
+    echo "<h3>Attempting Connection...</h3>";
+    $startTime = microtime(true);
+    
+    $conn = new PDO($connString, null, null, $options);
     
     $endTime = microtime(true);
     $connectionTime = round(($endTime - $startTime) * 1000, 2);
@@ -111,24 +61,11 @@ try {
     error_log("Connection Error Details:");
     error_log("Error Code: $errorCode");
     error_log("Error Message: $errorMessage");
-    error_log("Connection String (masked): " . preg_replace('/Password=[^;]+/', 'Password=*****', $pdoConnString));
     
-    // Provide troubleshooting suggestions based on error code
-    switch ($errorCode) {
-        case 'HYT00':
-            echo "<br><strong>Troubleshooting Suggestions:</strong><br>";
-            echo "1. Check if the server is accessible from your network<br>";
-            echo "2. Verify firewall rules allow connections to the database server<br>";
-            echo "3. Ensure the server name and port are correct<br>";
-            echo "4. Check if the database server is running and accepting connections<br>";
-            break;
-        case '28000':
-            echo "<br><strong>Troubleshooting Suggestions:</strong><br>";
-            echo "1. Verify the username and password are correct<br>";
-            echo "2. Check if the user has permission to access the database<br>";
-            break;
-        default:
-            echo "<br>Please check the error message above for specific details.";
-    }
+    echo "<br><strong>Troubleshooting Steps:</strong><br>";
+    echo "1. Verify your connection string in Azure App Service Configuration<br>";
+    echo "2. Make sure your Azure SQL Database server is running<br>";
+    echo "3. Check if your IP is allowed in Azure SQL Database firewall rules<br>";
+    echo "4. Verify the username and password in your connection string<br>";
 }
 ?> 
