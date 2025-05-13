@@ -8,8 +8,8 @@ class Member
 
     function __construct()
     {
-        require_once __DIR__ . '/../lib/DataSource.php';
-        $this->ds = new DataSource();
+        require_once __DIR__ . '/../lib/AzureDataSource.php';
+        $this->ds = new AzureDataSource();
     }
 
     /**
@@ -103,8 +103,8 @@ class Member
                     "status" => "success",
                     "message" => "You have registered successfully. Redirecting to login..."
                 );
-                // Add a small delay before redirect
-                header("refresh:2;url=login.php");
+                // Redirect to index.php which includes login.php
+                header("refresh:2;url=index.php");
             }
         }
         return $response;
