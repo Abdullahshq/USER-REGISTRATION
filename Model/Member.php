@@ -101,8 +101,10 @@ class Member
             if (! empty($memberId)) {
                 $response = array(
                     "status" => "success",
-                    "message" => "You have registered successfully."
+                    "message" => "You have registered successfully. Redirecting to login..."
                 );
+                // Add a small delay before redirect
+                header("refresh:2;url=login.php");
             }
         }
         return $response;
