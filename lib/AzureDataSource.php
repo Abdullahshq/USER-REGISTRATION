@@ -27,8 +27,11 @@ class AzureDataSource
     public function getConnection()
     {
         try {
-            $conn = new \PDO($this->connectionString);
-            $conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+            // For managed identity, we need to pass null for username and password
+            $conn = new \PDO($this->connectionString, null, null, [
+                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
+                \PDO::ATTR_TIMEOUT => 30
+            ]);
             return $conn;
         } catch (\PDOException $e) {
             exit("Connection Error: " . $e->getMessage());
