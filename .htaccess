@@ -1,0 +1,5 @@
+# Enable PHP extensions
+<IfModule mod_php.c>
+    extension=pdo_sqlsrv
+    extension=sqlsrv
+</IfModule> 

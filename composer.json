@@ -1,0 +1,6 @@
+{
+    "require": {
+        "microsoft/sqlsrv": "^5.10",
+        "microsoft/pdo_sqlsrv": "^5.10"
+    }
+} 
