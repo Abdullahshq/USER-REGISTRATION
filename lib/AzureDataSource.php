@@ -29,12 +29,16 @@ class AzureDataSource
         try {
             // Convert ADO.NET connection string to PDO format
             $connString = str_replace('Server=', 'sqlsrv:Server=', $this->connectionString);
+            // Debug output
+            error_log("Connection string being used: " . $connString);
+            
             $conn = new \PDO($connString, null, null, [
                 \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
                 \PDO::ATTR_TIMEOUT => 30
             ]);
             return $conn;
         } catch (\PDOException $e) {
+            error_log("Connection Error Details: " . $e->getMessage());
             exit("Connection Error: " . $e->getMessage());
         }
     }
