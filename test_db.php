@@ -25,7 +25,31 @@ error_log("Connection string is " . ($connString ? "set" : "not set"));
 
 try {
     // Convert ADO.NET connection string to PDO format
-    $pdoConnString = "sqlsrv:" . str_replace('Server=', 'Server=', $connString);
+    $pdoConnString = "sqlsrv:Server=" . 
+        str_replace(
+            array(
+                'Server=tcp:',
+                'Initial Catalog=',
+                ';Persist Security Info=False',
+                ';MultipleActiveResultSets=False',
+                ';Encrypt=True',
+                ';TrustServerCertificate=False',
+                ';Connection Timeout=30'
+            ),
+            array(
+                '',
+                'Database=',
+                '',
+                '',
+                ';Encrypt=yes',
+                ';TrustServerCertificate=no',
+                ''
+            ),
+            $connString
+        );
+    
+    error_log("PDO Connection string: " . $pdoConnString);
+    
     $conn = new PDO(
         $pdoConnString,
         null,
