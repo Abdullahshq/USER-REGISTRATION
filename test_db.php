@@ -19,26 +19,30 @@ echo "</pre>";
 // Try to connect to the database
 echo "<h2>Database Connection Test:</h2>";
 
-// Get the connection string from environment variable
+// Get the connection string from Azure App Service Configuration
+// This will automatically use the connection string from Azure App Service
 $connString = getenv('AZURE_SQL_CONNECTION_STRING');
-error_log("Connection string is " . ($connString ? "set" : "not set"));
 
-// Validate connection string
-if (!$connString) {
-    die("Error: AZURE_SQL_CONNECTION_STRING environment variable is not set");
-}
+// If using Managed Identity, we'll use a different connection approach
+$useManagedIdentity = getenv('USE_MANAGED_IDENTITY') === 'true';
 
-// Extract server name for ping test
-preg_match('/Server=tcp:([^,;]+)/', $connString, $matches);
-$serverName = $matches[1] ?? null;
-
-if ($serverName) {
-    echo "<h3>Network Connectivity Test:</h3>";
-    $pingResult = shell_exec("ping -c 1 " . escapeshellarg($serverName) . " 2>&1");
-    echo "<pre>Ping result for $serverName:\n$pingResult</pre>";
-}
-
-try {
+if ($useManagedIdentity) {
+    echo "<h3>Using Azure Managed Identity for Authentication</h3>";
+    // For Managed Identity, we only need the server and database name
+    $serverName = getenv('AZURE_SQL_SERVER');
+    $databaseName = getenv('AZURE_SQL_DATABASE');
+    
+    if (!$serverName || !$databaseName) {
+        die("Error: When using Managed Identity, both AZURE_SQL_SERVER and AZURE_SQL_DATABASE must be set in Azure App Service Configuration");
+    }
+    
+    $pdoConnString = "sqlsrv:Server=$serverName;Database=$databaseName;Authentication=ActiveDirectoryManagedIdentity";
+} else {
+    // Traditional connection string approach
+    if (!$connString) {
+        die("Error: AZURE_SQL_CONNECTION_STRING is not set in Azure App Service Configuration");
+    }
+    
     // Convert ADO.NET connection string to PDO format
     $pdoConnString = "sqlsrv:Server=" . 
         str_replace(
@@ -58,23 +62,25 @@ try {
                 '',
                 ';Encrypt=yes',
                 ';TrustServerCertificate=no',
-                ';ConnectionTimeout=60' // Increased timeout to 60 seconds
+                ';ConnectionTimeout=60'
             ),
             $connString
         );
-    
-    error_log("PDO Connection string: " . $pdoConnString);
-    
-    // Set connection options
-    $options = array(
-        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        PDO::ATTR_TIMEOUT => 60, // Set PDO timeout to 60 seconds
-        PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60 // Set query timeout to 60 seconds
-    );
-    
-    echo "<h3>Attempting Connection...</h3>";
-    $startTime = microtime(true);
-    
+}
+
+error_log("PDO Connection string: " . $pdoConnString);
+
+// Set connection options
+$options = array(
+    PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_TIMEOUT => 60, // Set PDO timeout to 60 seconds
+    PDO::SQLSRV_ATTR_QUERY_TIMEOUT => 60 // Set query timeout to 60 seconds
+);
+
+echo "<h3>Attempting Connection...</h3>";
+$startTime = microtime(true);
+
+try {
     $conn = new PDO(
         $pdoConnString,
         null,
