@@ -20,7 +20,7 @@ echo "</pre>";
 echo "<h2>Database Connection Test:</h2>";
 
 // Get the connection string from Azure App Service Configuration
-$connString = getenv('AZURE_SQL_CONNECTION_STRING');
+$connString = "Server=tcp:abddatabase.database.windows.net,1433;Initial Catalog=abddb;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;Authentication=Active Directory Default;";
 
 if (!$connString) {
     die("Error: Please set AZURE_SQL_CONNECTION_STRING in Azure App Service Configuration");
